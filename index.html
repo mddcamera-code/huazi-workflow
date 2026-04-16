@@ -176,24 +176,23 @@ function goStep(n){
 }
 
 async function callAI(systemPrompt, userMsg){
-  const res = await fetch(API_URL,{
+  const res = await fetch('https://tdyun.ai/v1/messages',{
     method:'POST',
     headers:{
       'Content-Type':'application/json',
-      'Authorization':'Bearer '+API_KEY
+      'x-api-key': API_KEY,
+      'anthropic-version':'2023-06-01'
     },
     body: JSON.stringify({
       model: MODEL,
       max_tokens: 1000,
-      messages:[
-        {role:'system', content: systemPrompt},
-        {role:'user', content: userMsg}
-      ]
+      system: systemPrompt,
+      messages:[{role:'user', content: userMsg}]
     })
   })
   const d = await res.json()
   if(d.error) throw new Error(JSON.stringify(d.error))
-  const txt = d.choices?.[0]?.message?.content
+  const txt = d.content?.[0]?.text
   if(!txt) throw new Error('空响应：'+JSON.stringify(d))
   return txt
 }
