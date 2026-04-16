@@ -205,11 +205,11 @@ document.getElementById('btn-topics').onclick = async ()=>{
   document.getElementById('topics-loading').classList.remove('hidden')
   document.getElementById('topics-result').classList.add('hidden')
 
-  const sys = `你是华仔，夜场人事十年，专门帮正规商务KTV的HR做抖音选题。
-输出格式：严格只输出JSON数组，不带任何markdown符号或说明文字。
-每个元素包含：title（选题标题）、hook（开场钩子方向，一句话）、comment（预判评论区会吵什么，一句话）、vibe（气质标注）。
-输出3-5个角度。`
-  const usr = `关键词：${kw}；气质偏向：${selectedVibe}。只输出JSON数组。`
+  const sys = `你是华仔，夜场人事十年，专门帮正规商务KTV的HR做抖音选题。你只能输出JSON，不能输出任何其他内容。`
+  const usr = `根据关键词"${kw}"，气质偏向"${selectedVibe}"，生成3-5个选题角度。
+
+必须严格只返回如下JSON数组格式，不要任何解释、不要markdown、不要代码块：
+[{"title":"标题","hook":"钩子方向","comment":"评论区预判","vibe":"气质标注"}]`
 
   try{
     const raw = await callAI(sys, usr)
@@ -260,15 +260,13 @@ async function genScript(){
   document.getElementById('script-loading').classList.remove('hidden')
   document.getElementById('script-output').classList.add('hidden')
 
-  const sys = `你是华仔，夜场人事十年经验，现在在正规商务KTV公司做HR，专门做抖音口播内容帮女孩直接找到靠谱工作，绕过黑中介和领队。
-脚本规范：
-- 总字数330-350字（四段合计）
-- 禁止使用：陪酒、商K、小姐、陪睡、出台、外围
-- 风格：大白话、情绪有力、多用反问句、接地气
-- 四段固定结构，返回JSON对象，字段：hook（30-40字）、conflict（120-140字）、memory（30-40字）、conclusion（60-80字）
-- 只输出JSON对象，不带任何markdown或说明`
+  const sys = `你是华仔，夜场人事十年经验，在正规商务KTV做HR。你只能输出JSON对象，不能输出任何其他内容。`
+  const usr = `根据选题"${selectedTopic.title}"，钩子参考"${selectedTopic.hook}"，气质"${selectedTopic.vibe}"，生成口播脚本。
 
-  const usr = `选题：${selectedTopic.title}\n钩子方向参考：${selectedTopic.hook}\n气质：${selectedTopic.vibe}\n只输出JSON。`
+必须严格只返回如下JSON对象，不要任何解释、不要markdown、不要代码块：
+{"hook":"钩子30-40字","conflict":"冲突120-140字","memory":"记忆点30-40字","conclusion":"结论60-80字"}
+
+要求：大白话、多反问句、禁止出现陪酒/商K/小姐/陪睡/出台/外围`
 
   try{
     const raw = await callAI(sys, usr)
