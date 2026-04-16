@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>华仔口播工作流</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background:#f5f4f0;color:#1a1a1a;font-size:15px}
+.app{max-width:720px;margin:0 auto;padding:2rem 1rem}
+h1{font-size:20px;font-weight:500;margin-bottom:1.5rem;color:#1a1a1a}
+.step-bar{display:flex;align-items:center;gap:0;margin-bottom:2rem}
+.step{display:flex;align-items:center;gap:6px;font-size:13px;color:#888;padding:6px 12px;border-radius:8px;transition:all .2s}
+.step.active{background:#fff;color:#1a1a1a;font-weight:500;box-shadow:0 0 0 0.5px #ddd}
+.step.done{color:#aaa}
+.step-dot{width:20px;height:20px;border-radius:50%;border:1.5px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0}
+.step.active .step-dot{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.sep{width:24px;height:1px;background:#ddd;flex-shrink:0}
+.card{background:#fff;border:0.5px solid #e0e0e0;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.label{font-size:13px;color:#666;margin-bottom:6px;display:block}
+.field{margin-bottom:1rem}
+input[type=text]{width:100%;padding:9px 12px;font-size:14px;border:0.5px solid #ccc;border-radius:8px;outline:none;transition:border .15s;background:#fff;color:#1a1a1a}
+input[type=text]:focus{border-color:#888}
+.radio-group{display:flex;flex-wrap:wrap;gap:8px}
+.radio-btn{padding:6px 14px;border:0.5px solid #ccc;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;color:#1a1a1a;transition:all .15s;user-select:none}
+.radio-btn.selected{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.btn-primary{background:#1a1a1a;color:#fff;border:none;padding:9px 20px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:500;transition:opacity .15s}
+.btn-primary:hover{opacity:.85}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:#fff;border:0.5px solid #ccc;padding:9px 20px;border-radius:8px;font-size:14px;cursor:pointer;color:#1a1a1a;transition:all .15s}
+.btn-ghost:hover{background:#f5f4f0}
+.topic-card{border:0.5px solid #e0e0e0;border-radius:8px;padding:1rem;cursor:pointer;transition:all .15s;margin-bottom:10px;background:#fff}
+.topic-card:hover{border-color:#aaa;background:#fafafa}
+.topic-card.selected{border:1.5px solid #1a1a1a;background:#fafafa}
+.topic-title{font-size:15px;font-weight:500;color:#1a1a1a;margin-bottom:6px}
+.topic-meta{font-size:12px;color:#666;line-height:1.6}
+.badge{display:inline-block;font-size:12px;padding:3px 10px;border-radius:10px;background:#f0efe9;color:#666;margin-bottom:10px}
+.script-section{margin-bottom:1rem}
+.seg-label{font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.script-box{background:#f8f7f3;border-radius:8px;padding:1rem;font-size:14px;line-height:1.8;color:#1a1a1a;min-height:60px;outline:none;border:1px solid transparent;transition:border .15s;white-space:pre-wrap}
+.script-box:focus{border-color:#ccc;background:#fff}
+.word-count{font-size:12px;color:#888;margin-top:8px}
+.word-count.ok{color:#2d7a4f}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:1rem}
+.loading{color:#888;font-size:14px;padding:1rem 0;display:flex;align-items:center;gap:8px}
+.hidden{display:none}
+.notice{font-size:13px;color:#666;background:#f5f4f0;border-radius:8px;padding:10px 14px;line-height:1.6}
+.violation-list{margin-top:.5rem}
+.vitem{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:0.5px solid #eee}
+.vbadge{font-size:11px;padding:2px 8px;border-radius:10px;flex-shrink:0;margin-top:2px}
+.vbadge.hard{background:#fde8e8;color:#a32d2d}
+.vbadge.soft{background:#fef3cd;color:#854f0b}
+.success-msg{color:#2d7a4f;font-size:14px;padding:8px 0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:16px;height:16px;border:2px solid #ddd;border-top-color:#666;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>华仔 · 口播工作流</h1>
+
+  <div class="step-bar">
+    <div class="step active" id="s1"><div class="step-dot">1</div>选题规划</div>
+    <div class="sep"></div>
+    <div class="step" id="s2"><div class="step-dot">2</div>脚本生成</div>
+    <div class="sep"></div>
+    <div class="step" id="s3"><div class="step-dot">3</div>违禁词检测</div>
+  </div>
+
+  <!-- MODULE 1 -->
+  <div id="mod1">
+    <div class="card">
+      <div class="field">
+        <span class="label">方向关键词</span>
+        <input type="text" id="keyword" placeholder="如：领队套路、试台规则、中介骗局" />
+      </div>
+      <div class="field">
+        <span class="label">内容气质</span>
+        <div class="radio-group" id="vibe-group">
+          <div class="radio-btn selected" data-v="骂醒型">骂醒型</div>
+          <div class="radio-btn" data-v="拆穿型">拆穿型</div>
+          <div class="radio-btn" data-v="科普型">科普型</div>
+          <div class="radio-btn" data-v="体贴新人型">体贴新人型</div>
+        </div>
+      </div>
+      <button class="btn-primary" id="btn-topics">生成选题角度</button>
+    </div>
+    <div id="topics-loading" class="loading hidden"><div class="spinner"></div>AI 生成选题中...</div>
+    <div id="topics-result" class="hidden">
+      <div id="topics-list"></div>
+      <div class="actions">
+        <button class="btn-primary" id="btn-to-script" disabled>用选中选题生成脚本</button>
+        <button class="btn-ghost" id="btn-regen-topics">重新生成</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODULE 2 -->
+  <div id="mod2" class="hidden">
+    <div class="card">
+      <div class="badge" id="script-topic-badge"></div>
+      <div id="script-loading" class="loading hidden"><div class="spinner"></div>华仔脚本生成中...</div>
+      <div id="script-output" class="hidden">
+        <div class="script-section">
+          <div class="seg-label">钩子（前3秒）</div>
+          <div class="script-box" id="seg-hook" contenteditable="true"></div>
+        </div>
+        <div class="script-section">
+          <div class="seg-label">冲突（戳痛点）</div>
+          <div class="script-box" id="seg-conflict" contenteditable="true"></div>
+        </div>
+        <div class="script-section">
+          <div class="seg-label">记忆点</div>
+          <div class="script-box" id="seg-memory" contenteditable="true"></div>
+        </div>
+        <div class="script-section">
+          <div class="seg-label">结论（身份锚点+评论区召唤）</div>
+          <div class="script-box" id="seg-conclusion" contenteditable="true"></div>
+        </div>
+        <div class="word-count" id="wc"></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn-primary" id="btn-check">违禁词检测</button>
+      <button class="btn-ghost" id="btn-copy">复制全文</button>
+      <button class="btn-ghost" id="btn-regen-script">重新生成</button>
+      <button class="btn-ghost" id="btn-back">← 返回选题</button>
+    </div>
+  </div>
+
+  <!-- MODULE 3 -->
+  <div id="mod3" class="hidden">
+    <div class="card">
+      <div style="font-size:14px;font-weight:500;margin-bottom:1rem">违禁词检测结果</div>
+      <div id="check-result"></div>
+    </div>
+    <div class="actions">
+      <button class="btn-ghost" id="btn-back2">← 返回脚本</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://tdyun.ai/v1/chat/completions'
+const API_KEY = 'sk-V9ThR40QayZE8ZdXUVmTyZxqLYo5dGdf05vlH2RJHOViAT5S'
+const MODEL = 'claude-3-5-sonnet-20241022'
+
+const HARD = ['陪酒','商K','小姐','陪睡','出台','外围']
+const SOFT = ['来钱快','尺度','配合度高','灌酒']
+const REPLACE = {
+  '陪酒':'服务','商K':'商务俱乐部','小姐':'工作人员','陪睡':'兼职',
+  '出台':'私活','外围':'外部渠道','来钱快':'收入好','尺度':'要求',
+  '配合度高':'配合性强','灌酒':'劝酒'
+}
+
+let selectedVibe = '骂醒型'
+let selectedTopic = null
+
+document.querySelectorAll('#vibe-group .radio-btn').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('#vibe-group .radio-btn').forEach(x=>x.classList.remove('selected'))
+    b.classList.add('selected')
+    selectedVibe = b.dataset.v
+  }
+})
+
+function goStep(n){
+  ;[1,2,3].forEach(i=>{
+    document.getElementById('s'+i).classList.remove('active','done')
+    document.getElementById('mod'+i).classList.add('hidden')
+  })
+  for(let i=1;i<n;i++) document.getElementById('s'+i).classList.add('done')
+  document.getElementById('s'+n).classList.add('active')
+  document.getElementById('mod'+n).classList.remove('hidden')
+  window.scrollTo(0,0)
+}
+
+async function callAI(systemPrompt, userMsg){
+  const res = await fetch(API_URL,{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'Authorization':'Bearer '+API_KEY
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: 1000,
+      messages:[
+        {role:'system', content: systemPrompt},
+        {role:'user', content: userMsg}
+      ]
+    })
+  })
+  const d = await res.json()
+  if(d.error) throw new Error(JSON.stringify(d.error))
+  const txt = d.choices?.[0]?.message?.content
+  if(!txt) throw new Error('空响应：'+JSON.stringify(d))
+  return txt
+}
+
+document.getElementById('btn-topics').onclick = async ()=>{
+  const kw = document.getElementById('keyword').value.trim()
+  if(!kw){ document.getElementById('keyword').focus(); return }
+  document.getElementById('btn-topics').disabled = true
+  document.getElementById('topics-loading').classList.remove('hidden')
+  document.getElementById('topics-result').classList.add('hidden')
+
+  const sys = `你是华仔，夜场人事十年，专门帮正规商务KTV的HR做抖音选题。
+输出格式：严格只输出JSON数组，不带任何markdown符号或说明文字。
+每个元素包含：title（选题标题）、hook（开场钩子方向，一句话）、comment（预判评论区会吵什么，一句话）、vibe（气质标注）。
+输出3-5个角度。`
+  const usr = `关键词：${kw}；气质偏向：${selectedVibe}。只输出JSON数组。`
+
+  try{
+    const raw = await callAI(sys, usr)
+    const clean = raw.replace(/```json|```/g,'').trim()
+    const topics = JSON.parse(clean)
+    renderTopics(topics)
+  }catch(e){
+    document.getElementById('topics-list').innerHTML=`<div class="notice">生成失败：${e.message}</div>`
+    document.getElementById('topics-result').classList.remove('hidden')
+  }
+  document.getElementById('btn-topics').disabled = false
+  document.getElementById('topics-loading').classList.add('hidden')
+}
+
+function renderTopics(topics){
+  const el = document.getElementById('topics-list')
+  el.innerHTML = topics.map((t,i)=>`
+    <div class="topic-card" data-i="${i}">
+      <div class="topic-title">${t.title}</div>
+      <div class="topic-meta"><strong style="font-weight:500">钩子方向：</strong>${t.hook}</div>
+      <div class="topic-meta" style="margin-top:4px"><strong style="font-weight:500">评论区预判：</strong>${t.comment}</div>
+      <div class="topic-meta" style="margin-top:4px"><strong style="font-weight:500">气质：</strong>${t.vibe}</div>
+    </div>
+  `).join('')
+  el.dataset.topics = JSON.stringify(topics)
+  el.querySelectorAll('.topic-card').forEach(c=>{
+    c.onclick=()=>{
+      el.querySelectorAll('.topic-card').forEach(x=>x.classList.remove('selected'))
+      c.classList.add('selected')
+      selectedTopic = topics[parseInt(c.dataset.i)]
+      document.getElementById('btn-to-script').disabled = false
+    }
+  })
+  document.getElementById('topics-result').classList.remove('hidden')
+  document.getElementById('btn-to-script').disabled = true
+}
+
+document.getElementById('btn-regen-topics').onclick = ()=> document.getElementById('btn-topics').click()
+
+document.getElementById('btn-to-script').onclick = ()=>{
+  if(!selectedTopic) return
+  goStep(2)
+  genScript()
+}
+
+async function genScript(){
+  document.getElementById('script-topic-badge').textContent = selectedTopic.title
+  document.getElementById('script-loading').classList.remove('hidden')
+  document.getElementById('script-output').classList.add('hidden')
+
+  const sys = `你是华仔，夜场人事十年经验，现在在正规商务KTV公司做HR，专门做抖音口播内容帮女孩直接找到靠谱工作，绕过黑中介和领队。
+脚本规范：
+- 总字数330-350字（四段合计）
+- 禁止使用：陪酒、商K、小姐、陪睡、出台、外围
+- 风格：大白话、情绪有力、多用反问句、接地气
+- 四段固定结构，返回JSON对象，字段：hook（30-40字）、conflict（120-140字）、memory（30-40字）、conclusion（60-80字）
+- 只输出JSON对象，不带任何markdown或说明`
+
+  const usr = `选题：${selectedTopic.title}\n钩子方向参考：${selectedTopic.hook}\n气质：${selectedTopic.vibe}\n只输出JSON。`
+
+  try{
+    const raw = await callAI(sys, usr)
+    const clean = raw.replace(/```json|```/g,'').trim()
+    const s = JSON.parse(clean)
+    document.getElementById('seg-hook').textContent = s.hook||''
+    document.getElementById('seg-conflict').textContent = s.conflict||''
+    document.getElementById('seg-memory').textContent = s.memory||''
+    document.getElementById('seg-conclusion').textContent = s.conclusion||''
+    updateWC()
+    document.getElementById('script-output').classList.remove('hidden')
+  }catch(e){
+    document.getElementById('seg-hook').textContent = '生成失败：'+e.message
+    document.getElementById('script-output').classList.remove('hidden')
+  }
+  document.getElementById('script-loading').classList.add('hidden')
+}
+
+function updateWC(){
+  const total = ['seg-hook','seg-conflict','seg-memory','seg-conclusion']
+    .reduce((s,id)=>s+(document.getElementById(id).textContent||'').length, 0)
+  const el = document.getElementById('wc')
+  const ok = total>=330 && total<=350
+  el.textContent = `当前字数：${total} 字（目标 330–350 字）`
+  el.className = 'word-count'+(ok?' ok':'')
+}
+
+;['seg-hook','seg-conflict','seg-memory','seg-conclusion'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', updateWC)
+})
+
+document.getElementById('btn-regen-script').onclick = genScript
+
+document.getElementById('btn-copy').onclick = ()=>{
+  const full = ['seg-hook','seg-conflict','seg-memory','seg-conclusion']
+    .map(id=>document.getElementById(id).textContent).join('\n\n')
+  navigator.clipboard.writeText(full).then(()=>{
+    const btn = document.getElementById('btn-copy')
+    const orig = btn.textContent
+    btn.textContent = '已复制'
+    setTimeout(()=>btn.textContent=orig, 1500)
+  })
+}
+
+document.getElementById('btn-back').onclick = ()=> goStep(1)
+document.getElementById('btn-back2').onclick = ()=> goStep(2)
+
+document.getElementById('btn-check').onclick = ()=>{
+  const full = ['seg-hook','seg-conflict','seg-memory','seg-conclusion']
+    .map(id=>document.getElementById(id).textContent).join(' ')
+
+  const found = []
+  HARD.forEach(w=>{ if(full.includes(w)) found.push({word:w,type:'hard',suggest:REPLACE[w]||'—'}) })
+  SOFT.forEach(w=>{ if(full.includes(w)) found.push({word:w,type:'soft',suggest:REPLACE[w]||'—'}) })
+
+  let html = ''
+  if(found.length===0){
+    html = `<div class="success-msg">✓ 未检测到违禁词，可以发布</div>`
+  } else {
+    html = '<div class="violation-list">'+found.map(f=>`
+      <div class="vitem">
+        <div class="vbadge ${f.type}">${f.type==='hard'?'硬违禁':'软风险'}</div>
+        <div>
+          <div style="font-size:14px;font-weight:500">"${f.word}"</div>
+          <div style="font-size:12px;color:#888;margin-top:2px">建议替换为：${f.suggest}</div>
+        </div>
+      </div>
+    `).join('')+'</div>'
+  }
+  document.getElementById('check-result').innerHTML = html
+  goStep(3)
+}
+</script>
+</body>
+</html>
