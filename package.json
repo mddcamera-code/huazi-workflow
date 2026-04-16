@@ -1,0 +1,27 @@
+{
+  "name": "huazi-workflow",
+  "version": "1.0.0",
+  "description": "Huazi short-form script workflow deployed on Vercel",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mddcamera-code/huazi-workflow.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1",
+    "next": "^16.2.4",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  },
+  "bugs": {
+    "url": "https://github.com/mddcamera-code/huazi-workflow/issues"
+  },
+  "homepage": "https://github.com/mddcamera-code/huazi-workflow#readme"
+}
