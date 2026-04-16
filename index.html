@@ -205,11 +205,13 @@ document.getElementById('btn-topics').onclick = async ()=>{
   document.getElementById('topics-loading').classList.remove('hidden')
   document.getElementById('topics-result').classList.add('hidden')
 
-  const sys = `你是华仔，夜场人事十年，专门帮正规商务KTV的HR做抖音选题。你只能输出JSON，不能输出任何其他内容。`
-  const usr = `根据关键词"${kw}"，气质偏向"${selectedVibe}"，生成3-5个选题角度。
+  const sys = `你是一个短视频内容策划助手，专门生成抖音选题。只能输出JSON，不输出任何其他内容。`
+  const usr = `关键词：${kw}，风格：${selectedVibe}。
 
-必须严格只返回如下JSON数组格式，不要任何解释、不要markdown、不要代码块：
-[{"title":"标题","hook":"钩子方向","comment":"评论区预判","vibe":"气质标注"}]`
+只返回JSON数组，不要解释不要markdown：
+[{"title":"视频标题","hook":"开场第一句方向","comment":"评论区会讨论什么","vibe":"${selectedVibe}"}]
+
+生成3-5条。`
 
   try{
     const raw = await callAI(sys, usr)
@@ -260,13 +262,11 @@ async function genScript(){
   document.getElementById('script-loading').classList.remove('hidden')
   document.getElementById('script-output').classList.add('hidden')
 
-  const sys = `你是华仔，夜场人事十年经验，在正规商务KTV做HR。你只能输出JSON对象，不能输出任何其他内容。`
-  const usr = `根据选题"${selectedTopic.title}"，钩子参考"${selectedTopic.hook}"，气质"${selectedTopic.vibe}"，生成口播脚本。
+  const sys = `你是短视频口播脚本创作助手。只能输出JSON对象，不输出任何其他内容。`
+  const usr = `选题：${selectedTopic.title}，风格：${selectedTopic.vibe}
 
-必须严格只返回如下JSON对象，不要任何解释、不要markdown、不要代码块：
-{"hook":"钩子30-40字","conflict":"冲突120-140字","memory":"记忆点30-40字","conclusion":"结论60-80字"}
-
-要求：大白话、多反问句、禁止出现陪酒/商K/小姐/陪睡/出台/外围`
+只返回JSON对象，不要解释不要markdown：
+{"hook":"开场钩子30-40字","conflict":"核心冲突内容120-140字","memory":"记忆金句30-40字","conclusion":"结尾召唤60-80字"}`
 
   try{
     const raw = await callAI(sys, usr)
