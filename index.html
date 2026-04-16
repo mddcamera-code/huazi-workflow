@@ -143,7 +143,7 @@ input[type=text]:focus{border-color:#888}
 <script>
 const API_URL = 'https://tdyun.ai/v1/chat/completions'
 const API_KEY = 'sk-V9ThR40QayZE8ZdXUVmTyZxqLYo5dGdf05vlH2RJHOViAT5S'
-const MODEL = 'claude-haiku-4-5-20251001'
+const MODEL = 'deepseek-3.2'
 
 const HARD = ['陪酒','商K','小姐','陪睡','出台','外围']
 const SOFT = ['来钱快','尺度','配合度高','灌酒']
@@ -176,23 +176,24 @@ function goStep(n){
 }
 
 async function callAI(systemPrompt, userMsg){
-  const res = await fetch('https://tdyun.ai/v1/messages',{
+  const res = await fetch(API_URL,{
     method:'POST',
     headers:{
       'Content-Type':'application/json',
-      'x-api-key': API_KEY,
-      'anthropic-version':'2023-06-01'
+      'Authorization':'Bearer '+API_KEY
     },
     body: JSON.stringify({
       model: MODEL,
       max_tokens: 1000,
-      system: systemPrompt,
-      messages:[{role:'user', content: userMsg}]
+      messages:[
+        {role:'system', content: systemPrompt},
+        {role:'user', content: userMsg}
+      ]
     })
   })
   const d = await res.json()
   if(d.error) throw new Error(JSON.stringify(d.error))
-  const txt = d.content?.[0]?.text
+  const txt = d.choices?.[0]?.message?.content
   if(!txt) throw new Error('空响应：'+JSON.stringify(d))
   return txt
 }
@@ -204,10 +205,10 @@ document.getElementById('btn-topics').onclick = async ()=>{
   document.getElementById('topics-loading').classList.remove('hidden')
   document.getElementById('topics-result').classList.add('hidden')
 
-  const sys = `你是一个短视频内容策划助手，专门生成抖音选题。只能输出JSON，不输出任何其他内容。`
+  const sys = `你是华仔，夜场人事十年，专门帮正规商务KTV的HR做抖音防骗科普内容。只输出JSON，不输出任何其他内容。`
   const usr = `关键词：${kw}，风格：${selectedVibe}。
 
-只返回JSON数组，不要解释不要markdown：
+只返回JSON数组，不要解释不要markdown不要代码块：
 [{"title":"视频标题","hook":"开场第一句方向","comment":"评论区会讨论什么","vibe":"${selectedVibe}"}]
 
 生成3-5条。`
@@ -261,11 +262,11 @@ async function genScript(){
   document.getElementById('script-loading').classList.remove('hidden')
   document.getElementById('script-output').classList.add('hidden')
 
-  const sys = `你是短视频口播脚本创作助手。只能输出JSON对象，不输出任何其他内容。`
-  const usr = `选题：${selectedTopic.title}，风格：${selectedTopic.vibe}
+  const sys = `你是华仔，夜场人事十年经验，在正规商务KTV做HR，专门做抖音防骗科普内容。只输出JSON对象，不输出任何其他内容。`
+  const usr = `选题：${selectedTopic.title}，风格：${selectedTopic.vibe}，钩子参考：${selectedTopic.hook}
 
-只返回JSON对象，不要解释不要markdown：
-{"hook":"开场钩子30-40字","conflict":"核心冲突内容120-140字","memory":"记忆金句30-40字","conclusion":"结尾召唤60-80字"}`
+只返回JSON对象，不要解释不要markdown不要代码块：
+{"hook":"开场钩子30-40字","conflict":"核心内容120-140字，大白话多反问句","memory":"记忆金句30-40字","conclusion":"结尾召唤60-80字"}`
 
   try{
     const raw = await callAI(sys, usr)
