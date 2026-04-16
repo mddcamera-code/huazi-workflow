@@ -205,13 +205,11 @@ document.getElementById('btn-topics').onclick = async ()=>{
   document.getElementById('topics-loading').classList.remove('hidden')
   document.getElementById('topics-result').classList.add('hidden')
 
-  const sys = `你是华仔，夜场人事十年，专门帮正规商务KTV的HR做抖音防骗科普内容。只输出JSON，不输出任何其他内容。`
-  const usr = `关键词：${kw}，风格：${selectedVibe}。
+  const sys = `你是华仔，夜场人事十年，抖音账号定位是拆穿领队套路、保护夜场新人直接找公司。说话大白话、情绪有力、善用反问句。禁止出现：陪酒、商K、小姐、陪睡、出台、外围。只输出JSON，不输出任何其他内容。`
+  const usr = `基于关键词【${kw}】和气质【${selectedVibe}】，生成5个抖音选题角度。
 
-只返回JSON数组，不要解释不要markdown不要代码块：
-[{"title":"视频标题","hook":"开场第一句方向","comment":"评论区会讨论什么","vibe":"${selectedVibe}"}]
-
-生成3-5条。`
+只返回如下JSON数组，不要解释不要markdown不要代码块：
+[{"title":"可直接用作视频标题","hook":"第一句话怎么勾人","comment":"这条发出去评论区会吵什么","vibe":"${selectedVibe}"}]`
 
   try{
     const raw = await callAI(sys, usr)
@@ -262,11 +260,19 @@ async function genScript(){
   document.getElementById('script-loading').classList.remove('hidden')
   document.getElementById('script-output').classList.add('hidden')
 
-  const sys = `你是华仔，夜场人事十年经验，在正规商务KTV做HR，专门做抖音防骗科普内容。只输出JSON对象，不输出任何其他内容。`
-  const usr = `选题：${selectedTopic.title}，风格：${selectedTopic.vibe}，钩子参考：${selectedTopic.hook}
+  const sys = `你是华仔，夜场人事十年，抖音账号定位是拆穿领队套路、保护夜场新人直接找公司。说话大白话、情绪有力、善用反问句。禁止出现：陪酒、商K、小姐、陪睡、出台、外围。只输出JSON对象，不输出任何其他内容。`
+  const usr = `基于选题【${selectedTopic.title}】，气质【${selectedTopic.vibe}】，钩子参考【${selectedTopic.hook}】，生成一篇口播脚本。
 
-只返回JSON对象，不要解释不要markdown不要代码块：
-{"hook":"开场钩子30-40字","conflict":"核心内容120-140字，大白话多反问句","memory":"记忆金句30-40字","conclusion":"结尾召唤60-80字"}`
+结构固定四段：
+- 钩子：前3秒留人，反问或反常识，30-40字
+- 冲突：揭矛盾戳痛点，120-140字
+- 记忆点：一句能被截图传播的话，30-40字
+- 结论：身份锚点+评论区互动召唤，60-80字
+
+总字数330-350字，对应75秒口播。结尾必须含"我是华仔，做夜场人事十年"和评论区互动引导。
+
+只返回如下JSON对象，不要解释不要markdown不要代码块：
+{"hook":"钩子内容","conflict":"冲突内容","memory":"记忆点内容","conclusion":"结论内容"}`
 
   try{
     const raw = await callAI(sys, usr)
